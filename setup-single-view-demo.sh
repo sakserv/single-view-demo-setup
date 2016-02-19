@@ -54,12 +54,6 @@ echo "### Downloading the latest single view demo code"
 cd /home/zeppelin && sudo -u zeppelin -E git clone https://github.com/abajwa-hw/single-view-demo.git
 check_rc $?
 
-# Restart Ambari-server
-echo -e "\n### Restarting ambari-server"
-service ambari-server stop
-service ambari-server start
-check_rc $?
-
 # Restart Ambari-agent
 echo -e "\n### Restarting ambari-agent"
 service ambari-agent stop

@@ -50,7 +50,7 @@ curl -sSL https://raw.githubusercontent.com/hortonworks-gallery/zeppelin-noteboo
 check_rc $?
 
 # Download the latest code from the git repo
-echo "### Downloading the latest single view demo code"
+echo -e "\n### Downloading the latest single view demo code"
 cd /home/zeppelin && sudo -u zeppelin -E git clone https://github.com/abajwa-hw/single-view-demo.git
 check_rc $?
 

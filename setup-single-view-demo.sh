@@ -122,7 +122,7 @@ echo -e "\n### Restarting Oozie for hive.tez.container.size change"
 export SERVICE=OOZIE
 export AMBARI_HOST=localhost
 export CLUSTER=Sandbox
-curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 120
 curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
 check_rc $?
 

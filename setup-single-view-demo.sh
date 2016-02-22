@@ -44,6 +44,11 @@ echo -e "\n### Setup postgres access for zeppelin"
 echo "host all all 127.0.0.1/32 md5" >> /var/lib/pgsql/data/pg_hba.conf
 check_rc $?
 
+# Add zeppelin to the HDFS group
+echo -e "\n### Adding the zeppelin user to the hdfs group"
+usermod -G hdfs zeppelin
+check_rc $?
+
 # Download the latest zeppelin notebooks
 echo -e "\n### Downloading and installing zeppelin notebooks"
 curl -sSL https://raw.githubusercontent.com/hortonworks-gallery/zeppelin-notebooks/master/update_all_notebooks.sh | sudo -u zeppelin -E sh
@@ -90,11 +95,34 @@ export PGPASSWORD=zeppelin
 psql -U zeppelin -d contoso -h localhost -f /home/zeppelin/single-view-demo/contoso-psql.sql
 check_rc $?
 
+# Set hive.tez.container.size to avoid OOM
+echo -e "\n### Setting hive.tez.container.size to 1GB to avoid OOM"
+/var/lib/ambari-server/resources/scripts/configs.sh -u admin -p $LAB_PW set localhost Sandbox hive-site "hive.tez.container.size" "1024"
+check_rc $?
+
 # Start Hive mysql
 echo -e "\n### Starting up Hive's mysql instance"
 export SERVICE=HIVE
 export AMBARI_HOST=localhost
 export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+check_rc $?
+
+# Restart hive
+echo -e "\n### Restarting Hive for hive.tez.container.size change"
+export SERVICE=HIVE
+export AMBARI_HOST=localhost
+export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+check_rc $?
+
+# Restart oozie
+echo -e "\n### Restarting Oozie for hive.tez.container.size change"
+export SERVICE=OOZIE
+export AMBARI_HOST=localhost
+export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
 curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Hive via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
 check_rc $?
 

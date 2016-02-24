@@ -102,9 +102,14 @@ export PGPASSWORD=zeppelin
 psql -U zeppelin -d contoso -h localhost -f /home/zeppelin/single-view-demo/contoso-psql.sql
 check_rc $?
 
+# Increase the amount of memory available to YARN
+echo -e "\n### Increasing the amount of memory allocated to YARN"
+/var/lib/ambari-server/resources/scripts/configs.sh -u admin -p $LAB_PW set localhost Sandbox yarn-site "yarn.nodemanager.resource.memory-mb" "8192"
+check_rc $?
+
 # Set hive.tez.container.size to avoid OOM
 echo -e "\n### Setting hive.tez.container.size to 1GB to avoid OOM"
-/var/lib/ambari-server/resources/scripts/configs.sh -u admin -p $LAB_PW set localhost Sandbox hive-site "hive.tez.container.size" "1024"
+/var/lib/ambari-server/resources/scripts/configs.sh -u admin -p $LAB_PW set localhost Sandbox hive-site "hive.tez.container.size" "2048"
 check_rc $?
 
 # Start Hive mysql
@@ -131,6 +136,33 @@ export AMBARI_HOST=localhost
 export CLUSTER=Sandbox
 curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Stop Oozie via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 120
 curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Oozie via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+check_rc $?
+
+# Restart yarn
+echo -e "\n### Restarting YARN for nodemanager memory change"
+export SERVICE=YARN
+export AMBARI_HOST=localhost
+export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Stop YARN via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 120
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start YARN via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+check_rc $?
+
+# Restart MapReduce2
+echo -e "\n### Restarting YARN for nodemanager memory change"
+export SERVICE=MAPREDUCE2
+export AMBARI_HOST=localhost
+export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Stop MapReduce2 via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 120
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start MapReduce2 via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
+check_rc $?
+
+# Restart Tez
+echo -e "\n### Restarting Tez for nodemanager memory change"
+export SERVICE=TEZ
+export AMBARI_HOST=localhost
+export CLUSTER=Sandbox
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Stop Tez via REST"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 120
+curl -u admin:$LAB_PW -i -H 'X-Requested-By: ambari' -X PUT -d '{"RequestInfo": {"context" :"Start Tez via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}'  http://$AMBARI_HOST:8080/api/v1/clusters/$CLUSTER/services/$SERVICE && sleep 60
 check_rc $?
 
 exit 0

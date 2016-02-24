@@ -49,6 +49,13 @@ echo -e "\n### Adding the zeppelin user to the hdfs group"
 usermod -G hdfs zeppelin
 check_rc $?
 
+# Setup the zeppelin password file for SQOOP
+echo -e "\n### Creating the zeppelin password file for SQOOP"
+echo -n "zeppelin" > /home/zeppelin/.password
+hdfs dfs -put /home/zeppelin/.password /user/zeppelin/
+check_rc $?
+rm /home/zeppelin/.password
+
 # Download the latest zeppelin notebooks
 echo -e "\n### Downloading and installing zeppelin notebooks"
 curl -sSL https://raw.githubusercontent.com/hortonworks-gallery/zeppelin-notebooks/master/update_all_notebooks.sh | sudo -u zeppelin -E sh
